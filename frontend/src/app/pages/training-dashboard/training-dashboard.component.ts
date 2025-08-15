@@ -19,8 +19,9 @@ import { AudioService } from '../../services/audio.service';
 })
 export class TrainingDashboardComponent implements OnInit {
   userName = signal('');
-  attemptsToday = signal(0); // mantido apenas para estatística opcional
+  attemptsToday = signal(0);
   successesToday = signal(0);
+  streakDays = signal(0);
 
   constructor(
     private router: Router,
@@ -45,8 +46,8 @@ export class TrainingDashboardComponent implements OnInit {
   private loadDailyStats() {
     const stats = this.dailyLimitService.getTodayStats();
     this.attemptsToday.set(stats.attempts);
-    this.successesToday.set(stats.successes);
-  // Limitação desativada
+  this.successesToday.set(stats.successes);
+  // streak placeholder futuro
   }
 
   goToIntervalComparator() { this.router.navigate(['/comparador-intervalos']); }
@@ -76,5 +77,4 @@ export class TrainingDashboardComponent implements OnInit {
     return Math.round((this.successesToday() / this.attemptsToday()) * 100);
   }
 
-  getRemainingAttempts(): number { return Infinity; }
 }

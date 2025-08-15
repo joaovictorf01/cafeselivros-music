@@ -9,11 +9,12 @@ export interface Interval {
 @Injectable({ providedIn: 'root' })
 export class AudioService {
   private audioContext: AudioContext | null = null;
-  private soundfontPlayer: any = null; // piano instrument instance
-  private isInitialized = false; // true after attempt (even if fallback)
+  private soundfontPlayer: any = null;
+  private isInitialized = false;
   private sfLoadError: any = null;
   private masterGain: GainNode | null = null;
-  private volume = 0.8; // 0..1
+  private compressor: DynamicsCompressorNode | null = null;
+  private volume = 1.5;
 
   readonly INTERVALS: Interval[] = [
     { name: '2M', semitones: 2, displayName: '2ª Maior' },
@@ -30,36 +31,42 @@ export class AudioService {
 
   async initialize(): Promise<void> {
     if (this.isInitialized) return;
-    if (typeof window === 'undefined') return; // SSR guard
+    if (typeof window === 'undefined') return;
     try {
       this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      // Master gain node
-      this.masterGain = this.audioContext.createGain();
-      this.masterGain.gain.value = this.volume;
-      this.masterGain.connect(this.audioContext.destination);
+  this.masterGain = this.audioContext.createGain();
+  this.masterGain.gain.value = this.volume; // overall boost
+  this.compressor = this.audioContext.createDynamicsCompressor();
+  this.compressor.threshold.value = -24;
+  this.compressor.knee.value = 30;
+  this.compressor.ratio.value = 4;
+  this.compressor.attack.value = 0.003;
+  this.compressor.release.value = 0.25;
+  this.masterGain.connect(this.compressor).connect(this.audioContext.destination);
       if (this.audioContext.state === 'suspended') {
-        // Some browsers require user gesture; resume will happen on first play
-        console.log('[AudioService] Context suspended at init, will try resume later');
+        /* will resume on first play */
       }
-      // Dynamic import to avoid SSR/different bundler issues
       const mod: any = await import('soundfont-player').catch(e => { this.sfLoadError = e; return null; });
       if (mod) {
-        const Soundfont = mod.default || mod; // default export or namespace
+        const Soundfont = mod.default || mod;
         try {
-          this.soundfontPlayer = await Soundfont.instrument(this.audioContext, 'acoustic_grand_piano');
-          console.log('[AudioService] SoundFont piano loaded');
+          this.soundfontPlayer = await Soundfont.instrument(
+            this.audioContext,
+            'acoustic_grand_piano',
+            { destination: this.masterGain || this.audioContext.destination }
+          );
         } catch (e) {
           this.sfLoadError = e;
-          console.error('[AudioService] Failed to load instrument, will use oscillator fallback', e);
+          console.error('Instrument load failed, fallback oscillator', e);
         }
       } else {
-        console.error('[AudioService] soundfont-player module failed to load');
+        console.error('soundfont-player module failed to load');
       }
     } catch (err) {
       this.sfLoadError = err;
-      console.error('[AudioService] Audio init unexpected error', err);
+      console.error('Audio init error', err);
     } finally {
-      this.isInitialized = true; // even if SoundFont missing we can fallback
+      this.isInitialized = true;
     }
   }
 
@@ -75,14 +82,13 @@ export class AudioService {
     }
     try {
       if (this.soundfontPlayer) {
-        this.soundfontPlayer.play(note, this.audioContext.currentTime, { duration, gain: 0.9 });
+  this.soundfontPlayer.play(note, this.audioContext.currentTime, { duration, gain: 1.4 });
       } else {
-        // Fallback simple oscillator beep
         await this.playOscillator(note, duration);
       }
       await this.wait(duration * 1000);
     } catch (e) {
-      console.error('[AudioService] Failed to play note', e);
+      console.error('Play note error', e);
     }
   }
 
@@ -95,10 +101,9 @@ export class AudioService {
     if (!this.audioContext) return;
     if (this.audioContext.state === 'suspended') { try { await this.audioContext.resume(); } catch { } }
     if (this.soundfontPlayer) {
-      notes.forEach(n => this.soundfontPlayer.play(n, this.audioContext!.currentTime, { duration, gain: 0.7 }));
+  notes.forEach(n => this.soundfontPlayer.play(n, this.audioContext!.currentTime, { duration, gain: 1.2 }));
       await this.wait(duration * 1000);
     } else {
-      // Fallback: arpeggiate quickly using oscillator
       for (const n of notes) {
         await this.playOscillator(n, duration / notes.length);
       }
@@ -179,14 +184,13 @@ export class AudioService {
     osc.type = 'sine';
     osc.frequency.value = freq;
     gain.gain.setValueAtTime(0.0001, this.audioContext.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.5, this.audioContext.currentTime + 0.02);
+  gain.gain.exponentialRampToValueAtTime(1.0, this.audioContext.currentTime + 0.02);
     gain.gain.exponentialRampToValueAtTime(0.0001, this.audioContext.currentTime + duration);
     osc.connect(gain).connect(this.audioContext.destination);
     osc.start();
     osc.stop(this.audioContext.currentTime + duration + 0.05);
   }
 
-  // Debug helper for UI/logging if needed
   getDebugStatus() {
     return {
       initialized: this.isInitialized,
@@ -198,6 +202,6 @@ export class AudioService {
   }
 
   getCurrentPiano(): number { return 1; }
-  switchPiano(): void { /* placeholder */ }
+  switchPiano(): void {}
   isAudioAvailable(): boolean { return this.isInitialized && !!this.audioContext; }
 }
