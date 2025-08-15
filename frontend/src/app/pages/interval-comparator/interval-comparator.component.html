@@ -1,0 +1,132 @@
+<div class="comparison-container" (keydown)="onKeydown($event)" tabindex="0">
+  <header class="exercise-header">
+    <button mat-icon-button (click)="goBack()" aria-label="Voltar">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h1>Comparador de Intervalos</h1>
+    <div class="attempts-counter">
+      Restantes: {{ remainingAttempts() }}
+    </div>
+  </header>
+
+  <main class="exercise-content">
+    <mat-card class="instruction-card">
+      <mat-card-content>
+        <p>Ouça os dois pares de notas e determine qual intervalo é maior:</p>
+        <div class="audio-controls">
+          <button 
+            mat-raised-button 
+            color="primary"
+            [disabled]="isPlayDisabled()"
+            (click)="playPairA()"
+            class="audio-button">
+            <mat-icon>play_arrow</mat-icon>
+            Tocar Par A
+          </button>
+          
+          <button 
+            mat-raised-button 
+            color="primary"
+            [disabled]="isPlayDisabled()"
+            (click)="playPairB()"
+            class="audio-button">
+            <mat-icon>play_arrow</mat-icon>
+            Tocar Par B
+          </button>
+          
+          <button 
+            mat-button
+            [disabled]="isPlayDisabled()"
+            (click)="repeatBoth()"
+            class="repeat-button">
+            <mat-icon>replay</mat-icon>
+            Repetir (R)
+          </button>
+        </div>
+        
+        @if (isPlaying()) {
+          <div class="playing-indicator">
+            <mat-icon class="spinning">volume_up</mat-icon>
+            Reproduzindo...
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="answer-card">
+      <mat-card-header>
+        <mat-card-title>Qual intervalo é maior?</mat-card-title>
+      </mat-card-header>
+      
+      <mat-card-content>
+        <div class="answer-buttons">
+          <button 
+            mat-raised-button 
+            [color]="selectedAnswer() === 'A' ? 'primary' : 'basic'"
+            [disabled]="isAnswered()"
+            (click)="selectAnswer('A')"
+            class="answer-button">
+            <mat-icon>music_note</mat-icon>
+            Par A é maior
+          </button>
+          
+          <button 
+            mat-raised-button 
+            [color]="selectedAnswer() === 'B' ? 'primary' : 'basic'"
+            [disabled]="isAnswered()"
+            (click)="selectAnswer('B')"
+            class="answer-button">
+            <mat-icon>music_note</mat-icon>
+            Par B é maior
+          </button>
+          
+          <button 
+            mat-raised-button 
+            [color]="selectedAnswer() === 'equal' ? 'primary' : 'basic'"
+            [disabled]="isAnswered()"
+            (click)="selectAnswer('equal')"
+            class="answer-button">
+            <mat-icon>balance</mat-icon>
+            Iguais
+          </button>
+        </div>
+        
+        @if (showFeedback()) {
+          <div class="feedback" [class.correct]="feedbackMessage().includes('Correto')">
+            <p role="status">{{ feedbackMessage() }}</p>
+            @if (intervalA() && intervalB()) {
+              <div class="interval-info">
+                <p><strong>Par A:</strong> {{ intervalA()!.displayName }} ({{ intervalA()!.semitones }} semitons)</p>
+                <p><strong>Par B:</strong> {{ intervalB()!.displayName }} ({{ intervalB()!.semitones }} semitons)</p>
+              </div>
+            }
+          </div>
+        }
+      </mat-card-content>
+      
+      <mat-card-actions class="center-actions">
+        <button 
+          mat-raised-button 
+          color="primary"
+          [disabled]="isSubmitDisabled()"
+          (click)="submitAnswer()">
+          Responder
+        </button>
+        
+        @if (canPlayNext()) {
+          <button 
+            mat-raised-button 
+            color="accent"
+            (click)="nextExercise()">
+            Próximo (N)
+          </button>
+        }
+      </mat-card-actions>
+    </mat-card>
+  <!-- Daily attempt warning removed: unlimited practice mode -->
+  </main>
+
+  <div class="shortcuts-info">
+    <p><strong>Atalhos:</strong> R = Repetir | N = Próximo | Enter = Responder</p>
+  </div>
+</div>

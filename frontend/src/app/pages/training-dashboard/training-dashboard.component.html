@@ -1,0 +1,121 @@
+<div class="dashboard-container">
+  <div class="greeting">
+    <h1>Olá, {{ userName() }}!</h1>
+    <p>Pronto para treinar sua percepção auditiva?</p>
+  </div>
+
+  <div class="stats-section">
+    <mat-card class="stats-card">
+      <mat-card-header>
+        <mat-card-title>Estatísticas de Hoje</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <span class="stat-number">{{ attemptsToday() }}</span>
+            <span class="stat-label">Tentativas</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">{{ successesToday() }}</span>
+            <span class="stat-label">Acertos</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">{{ getSuccessRate() }}%</span>
+            <span class="stat-label">Taxa de Acerto</span>
+          </div>
+    <!-- Remaining attempts removed (unlimited mode) -->
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+  <!-- Limit reached warning removed (unlimited mode) -->
+
+  <div class="exercises-section">
+    <h2>Escolha seu Treino</h2>
+    
+    <div class="exercises-grid">
+  <mat-card class="exercise-card">
+        <mat-card-header>
+          <div mat-card-avatar class="exercise-avatar comparison-avatar">
+            <mat-icon>compare_arrows</mat-icon>
+          </div>
+          <mat-card-title>Comparador de Intervalos</mat-card-title>
+          <mat-card-subtitle>Compare dois intervalos e identifique qual é maior</mat-card-subtitle>
+        </mat-card-header>
+        
+        <mat-card-content>
+          <p>Ouça dois pares de notas e determine qual intervalo é maior, menor ou se são iguais.</p>
+          <p><strong>Habilidade:</strong> Percepção relativa de intervalos</p>
+        </mat-card-content>
+        
+        <mat-card-actions align="end">
+          <button 
+            mat-raised-button 
+            color="primary"
+            (click)="goToIntervalComparator()">
+            Começar
+          </button>
+        </mat-card-actions>
+      </mat-card>
+
+      <mat-card class="exercise-card">
+        <mat-card-header>
+          <div mat-card-avatar class="exercise-avatar identification-avatar">
+            <mat-icon>hearing</mat-icon>
+          </div>
+          <mat-card-title>Identificação de Intervalos</mat-card-title>
+          <mat-card-subtitle>Identifique intervalos específicos pelo som</mat-card-subtitle>
+        </mat-card-header>
+        
+        <mat-card-content>
+          <p>Ouça um intervalo e escolha qual intervalo específico foi tocado entre as opções disponíveis.</p>
+          <p><strong>Habilidade:</strong> Reconhecimento absoluto de intervalos</p>
+        </mat-card-content>
+        
+        <mat-card-actions align="end">
+          <button 
+            mat-raised-button 
+            color="primary"
+            (click)="goToIntervalIdentification()">
+            Começar
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  </div>
+
+  <div class="sound-test-section">
+    <mat-card class="test-card">
+      <mat-card-content>
+        <div class="test-content">
+          <mat-icon class="test-icon">volume_up</mat-icon>
+          <div class="sound-info">
+            <h3>Teste de Som</h3>
+            <p>Clique para testar se o áudio está funcionando corretamente</p>
+            @if (audioService.isUsingSoundfont()) {
+              <p class="audio-info">
+                <mat-icon>piano</mat-icon>
+                Usando SoundFont Piano {{ audioService.getCurrentPiano() }}
+              </p>
+            } @else {
+              <p class="audio-info">
+                <mat-icon>audiotrack</mat-icon>
+                Carregando SoundFont...
+              </p>
+            }
+          </div>
+          <div class="sound-controls">
+            <button mat-raised-button (click)="testSound()">
+              Testar Som
+            </button>
+            @if (audioService.isUsingSoundfont()) {
+              <button mat-button (click)="switchPiano()">
+                Trocar Piano (SF2)
+              </button>
+            }
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

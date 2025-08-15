@@ -1,0 +1,50 @@
+// Material Design theme
+@use '@angular/material' as mat;
+
+@include mat.core();
+
+// Define the palettes for your theme using the Material Design palettes available in palette.scss
+$primary: mat.define-palette(mat.$indigo-palette);
+$accent: mat.define-palette(mat.$pink-palette, A200, A100, A400);
+$warn: mat.define-palette(mat.$red-palette);
+
+// Create the theme object. A theme consists of configurations for individual
+// theming systems such as "color" or "typography".
+$theme: mat.define-light-theme((
+  color: (
+    primary: $primary,
+    accent: $accent,
+    warn: $warn,
+  ),
+  typography: mat.define-typography-config(),
+  density: 0,
+));
+
+// Include theme styles for core and each component used in your app.
+@include mat.all-component-themes($theme);
+
+/* Global styles */
+html, body { 
+  height: 100%; 
+  margin: 0; 
+  font-family: Roboto, "Helvetica Neue", sans-serif; 
+}
+
+* {
+  box-sizing: border-box;
+}
+
+// Accessibility: ensure minimum touch target size
+button, .mat-button, .mat-raised-button, .mat-fab, .mat-mini-fab {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+// Ensure focus indicators are visible
+button:focus-visible, 
+.mat-button:focus-visible,
+.mat-raised-button:focus-visible,
+.mat-card:focus-visible {
+  outline: 2px solid mat.get-color-from-palette($primary, 500);
+  outline-offset: 2px;
+}

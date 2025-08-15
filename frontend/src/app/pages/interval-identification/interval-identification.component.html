@@ -1,0 +1,114 @@
+<div class="identification-container" (keydown)="onKeydown($event)" tabindex="0">
+  <header class="exercise-header">
+    <button mat-icon-button (click)="goBack()" aria-label="Voltar">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h1>Identificação de Intervalos</h1>
+    <div class="attempts-counter">
+      Restantes: {{ remainingAttempts() }}
+    </div>
+  </header>
+
+  <main class="exercise-content">
+    <mat-card class="instruction-card">
+      <mat-card-content>
+        <p>Ouça o intervalo tocado e identifique qual é:</p>
+        <p class="direction-info"><strong>Direção:</strong> {{ getDirectionText() }}</p>
+        <div class="audio-controls">
+          <button 
+            mat-raised-button 
+            color="primary"
+            [disabled]="isPlayDisabled()"
+            (click)="playInterval()"
+            class="play-button">
+            <mat-icon>{{ isPlaying() ? 'volume_up' : 'play_arrow' }}</mat-icon>
+            {{ isPlaying() ? 'Reproduzindo...' : 'Ouvir Intervalo' }}
+          </button>
+          
+          @if (!isPlaying()) {
+            <button 
+              mat-button
+              [disabled]="isPlayDisabled()"
+              (click)="playInterval()"
+              class="repeat-button">
+              <mat-icon>replay</mat-icon>
+              Repetir (R)
+            </button>
+          }
+        </div>
+        
+        @if (isPlaying()) {
+          <div class="playing-indicator">
+            <mat-icon class="spinning">volume_up</mat-icon>
+            Reproduzindo intervalo...
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="answer-card">
+      <mat-card-header>
+        <mat-card-title>Qual intervalo você ouviu?</mat-card-title>
+      </mat-card-header>
+      
+      <mat-card-content>
+        <div class="answer-buttons">
+          @for (option of options(); track option.name) {
+            <button 
+              mat-raised-button 
+              [color]="selectedAnswer() === option.name ? 'primary' : 'basic'"
+              [disabled]="isAnswered()"
+              (click)="selectAnswer(option.name)"
+              class="answer-button"
+              [attr.aria-label]="'Selecionar intervalo ' + option.displayName">
+              <div class="button-content">
+                <mat-icon>music_note</mat-icon>
+                <div class="interval-info">
+                  <span class="interval-name">{{ option.displayName }}</span>
+                  <span class="interval-semitones">{{ option.semitones }} semitons</span>
+                </div>
+              </div>
+            </button>
+          }
+        </div>
+        
+        @if (showFeedback()) {
+          <div class="feedback" [class.correct]="feedbackMessage().includes('Correto')">
+            <p role="status">{{ feedbackMessage() }}</p>
+            @if (currentInterval()) {
+              <div class="interval-info">
+                <p><strong>Intervalo correto:</strong> {{ currentInterval()!.displayName }}</p>
+                <p><strong>Semitons:</strong> {{ currentInterval()!.semitones }}</p>
+                <p><strong>Direção:</strong> {{ getDirectionText() }}</p>
+              </div>
+            }
+          </div>
+        }
+      </mat-card-content>
+      
+      <mat-card-actions class="center-actions">
+        <button 
+          mat-raised-button 
+          color="primary"
+          [disabled]="isSubmitDisabled()"
+          (click)="submitAnswer()">
+          Responder
+        </button>
+        
+        @if (canPlayNext()) {
+          <button 
+            mat-raised-button 
+            color="accent"
+            (click)="nextExercise()">
+            Próximo (N)
+          </button>
+        }
+      </mat-card-actions>
+    </mat-card>
+  <!-- Daily attempt warning removed: unlimited practice mode -->
+  </main>
+
+  <div class="shortcuts-info">
+    <p><strong>Atalhos:</strong> R = Repetir | N = Próximo | Enter = Ouvir/Responder</p>
+  </div>
+</div>

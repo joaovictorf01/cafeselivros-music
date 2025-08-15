@@ -1,0 +1,205 @@
+import { Injectable } from '@angular/core';
+
+declare var require: any;
+
+export interface Interval {
+  name: string;
+  semitones: number;
+  displayName: string;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AudioService {
+  private audioContext: AudioContext | null = null;
+  private soundfontPlayer: any = null;
+  private isInitialized = false;
+
+  // Intervalos suportados
+  readonly INTERVALS: Interval[] = [
+    { name: '2M', semitones: 2, displayName: '2ª Maior' },
+    { name: '3m', semitones: 3, displayName: '3ª Menor' },
+    { name: '3M', semitones: 4, displayName: '3ª Maior' },
+    { name: '4J', semitones: 5, displayName: '4ª Justa' },
+    { name: '5J', semitones: 7, displayName: '5ª Justa' },
+    { name: '8J', semitones: 12, displayName: '8ª Justa' }
+  ];
+
+  // Range de notas (C4 a C6)
+  private readonly BASE_NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  private readonly MIN_MIDI = 60; // C4
+  private readonly MAX_MIDI = 84; // C6
+
+  async initialize(): Promise<void> {
+    if (this.isInitialized) return;
+
+    try {
+      console.log('Initializing AudioService...');
+      
+      // Verificar se está no browser (não SSR)
+      if (typeof window === 'undefined') {
+        throw new Error('AudioService can only run in browser');
+      }
+
+      // Inicializar AudioContext
+      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      // Resume AudioContext se estiver suspenso
+      if (this.audioContext.state === 'suspended') {
+        await this.audioContext.resume();
+      }
+      
+      console.log('AudioContext created, loading SoundFont...');
+      
+      // Carregar SoundFont usando soundfont-player
+      const Soundfont = require('soundfont-player');
+      this.soundfontPlayer = await Soundfont.instrument(this.audioContext, 'acoustic_grand_piano');
+      
+      this.isInitialized = true;
+      console.log('SoundFont loaded successfully');
+    } catch (error) {
+      console.error('Failed to initialize SoundFont:', error);
+      throw new Error('SoundFont initialization failed');
+    }
+  }
+
+  async playNote(note: string, duration: number = 0.8): Promise<void> {
+    console.log(`Attempting to play note: ${note}`);
+    
+    if (!this.isInitialized) {
+      console.log('AudioService not initialized, initializing now...');
+      await this.initialize();
+    }
+
+    if (!this.soundfontPlayer || !this.audioContext) {
+      throw new Error('SoundFont not available');
+    }
+
+    // Verificar se o AudioContext precisa ser resumido (para interação do usuário)
+    if (this.audioContext.state === 'suspended') {
+      console.log('AudioContext suspended, resuming...');
+      await this.audioContext.resume();
+    }
+
+    try {
+      console.log(`Playing note ${note} with duration ${duration}s`);
+      
+      const notePlayer = this.soundfontPlayer.play(note, this.audioContext.currentTime, {
+        duration: duration,
+        gain: 0.7
+      });
+      
+      return new Promise(resolve => {
+        setTimeout(() => {
+          console.log(`Note ${note} finished playing`);
+          resolve();
+        }, duration * 1000);
+      });
+    } catch (error) {
+      console.error('Failed to play note:', error);
+      throw error;
+    }
+  }
+
+  async playInterval(rootNote: string, interval: Interval, ascending: boolean = true, noteDelay: number = 0.1): Promise<void> {
+    const rootMidi = this.noteToMidi(rootNote);
+    const intervalMidi = ascending ? 
+      rootMidi + interval.semitones : 
+      rootMidi - interval.semitones;
+
+    if (intervalMidi < this.MIN_MIDI || intervalMidi > this.MAX_MIDI) {
+      throw new Error('Interval out of playable range');
+    }
+
+    const intervalNote = this.midiToNote(intervalMidi);
+
+    if (ascending) {
+      await this.playNote(rootNote, 0.8);
+      await this.wait(noteDelay * 1000);
+      await this.playNote(intervalNote, 0.8);
+    } else {
+      await this.playNote(intervalNote, 0.8);
+      await this.wait(noteDelay * 1000);
+      await this.playNote(rootNote, 0.8);
+    }
+  }
+
+  generateRandomInterval(): Interval {
+    return this.INTERVALS[Math.floor(Math.random() * this.INTERVALS.length)];
+  }
+
+  generateValidRootNote(interval: Interval, ascending: boolean): string {
+    let validNotes: string[] = [];
+    
+    for (let octave = 4; octave <= 5; octave++) {
+      for (const note of this.BASE_NOTES) {
+        const rootMidi = this.noteToMidi(`${note}${octave}`);
+        const intervalMidi = ascending ? 
+          rootMidi + interval.semitones : 
+          rootMidi - interval.semitones;
+        
+        if (intervalMidi >= this.MIN_MIDI && intervalMidi <= this.MAX_MIDI) {
+          validNotes.push(`${note}${octave}`);
+        }
+      }
+    }
+    
+    if (validNotes.length === 0) {
+      throw new Error(`No valid root notes for interval ${interval.name}`);
+    }
+    
+    return validNotes[Math.floor(Math.random() * validNotes.length)];
+  }
+
+  private noteToMidi(note: string): number {
+    const notePattern = /^([A-G][#b]?)(\d+)$/;
+    const match = note.match(notePattern);
+    
+    if (!match) {
+      throw new Error(`Invalid note format: ${note}`);
+    }
+    
+    const [, noteName, octaveStr] = match;
+    const octave = parseInt(octaveStr);
+    
+    const noteValues: { [key: string]: number } = {
+      'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3,
+      'E': 4, 'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8,
+      'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11
+    };
+    
+    const noteValue = noteValues[noteName];
+    if (noteValue === undefined) {
+      throw new Error(`Invalid note name: ${noteName}`);
+    }
+    
+    return (octave + 1) * 12 + noteValue;
+  }
+
+  private midiToNote(midi: number): string {
+    const octave = Math.floor(midi / 12) - 1;
+    const noteIndex = midi % 12;
+    const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    
+    return `${noteNames[noteIndex]}${octave}`;
+  }
+
+  private wait(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  // Métodos para o dashboard
+  getCurrentPiano(): number {
+    return 1; // Sempre retorna 1 para simplicidade
+  }
+
+  switchPiano(): void {
+    // Método mantido para compatibilidade, mas não faz nada
+    console.log('Piano switching not implemented in this version');
+  }
+
+  isAudioAvailable(): boolean {
+    return this.isInitialized;
+  }
+}

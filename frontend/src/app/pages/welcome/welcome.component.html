@@ -1,0 +1,43 @@
+<div class="welcome-container">
+  <mat-card class="welcome-card">
+    <mat-card-header>
+      <mat-card-title>Bem-vindo ao Treino Auditivo Musical!</mat-card-title>
+      <mat-card-subtitle>Desenvolva sua percepção musical com exercícios de intervalos</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="name-section">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label for="name-input">Seu nome</mat-label>
+          <input 
+            matInput 
+            id="name-input"
+            [(ngModel)]="userName"
+            placeholder="Digite seu nome"
+            (keyup.enter)="onStart()"
+            maxlength="50">
+        </mat-form-field>
+      </div>
+
+      <div class="description">
+        <p>Este app foi criado para ajudar músicos a desenvolverem sua percepção auditiva através de exercícios práticos com intervalos musicais.</p>
+        <p>Você poderá praticar:</p>
+        <ul>
+          <li><strong>Comparação de Intervalos:</strong> Identifique qual dos dois intervalos é maior</li>
+          <li><strong>Identificação de Intervalos:</strong> Reconheça intervalos específicos pelo som</li>
+        </ul>
+      </div>
+    </mat-card-content>
+
+    <mat-card-actions class="center-actions">
+      <button 
+        mat-raised-button 
+        color="primary" 
+        [disabled]="isStartDisabled()"
+        (click)="onStart()"
+        class="start-button">
+        Começar
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>
