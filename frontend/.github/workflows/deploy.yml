@@ -2,7 +2,7 @@ name: Deploy Angular to Nginx
 
 on:
   push:
-    branches: [ "master" ]   # ajuste se usar outra branch
+    branches: [ "master" ]   # troque para "main" se for sua branch
   workflow_dispatch:
 
 jobs:
@@ -13,37 +13,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Use Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install deps
-        run: |
-          set -euxo pipefail
-          npm ci
-
-      - name: Build Angular (prod)
-        run: |
-          set -euxo pipefail
-          npx ng build --configuration production
-          echo "Top-level dist contents:" && ls -la dist
-          echo "Browser subtree (first 100 lines):" && ls -la dist/frontend/browser | head -n 100
-          echo "Disk usage:" && du -sh dist/frontend/browser || true
-
-      - name: Copy files via rsync over SSH
-        uses: burnett01/rsync-deployments@v7.0.2
-        with:
-          # switches simplificados (evita preservar dono/grupo/acl)
-          switches: -avzr --delete
-          path: dist/frontend/browser/
-          remote_path: ${{ secrets.TARGET_DIR }}/
-          remote_host: ${{ secrets.SSH_HOST }}
-          remote_user: ${{ secrets.SSH_USER }}
-          remote_key: ${{ secrets.SSH_KEY }}
-
-      - name: Fix perms (parents), sanity checks & reload Nginx
+      - name: Probe SSH (checa conexão e permissões)
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -51,34 +21,47 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             set -euxo pipefail
-
-            # Garante pastas e permissões de acesso (pais precisam ter 'x')
+            whoami
+            hostname
             sudo mkdir -p ${{ secrets.TARGET_DIR }}
             sudo chown -R ${{ secrets.SSH_USER }}:www-data /var/www/cafeselivros
             sudo chmod 755 /var/www /var/www/cafeselivros
+            date | tee ${{ secrets.TARGET_DIR }}/_probe.txt
+            ls -la ${{ secrets.TARGET_DIR }} | head
 
-            # Permissões dentro do target (dirs 755, files 644)
-            find ${{ secrets.TARGET_DIR }} -type d -exec chmod 755 {} \;
-            find ${{ secrets.TARGET_DIR }} -type f -exec chmod 644 {} \;
+      - name: Use Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
 
-            # Listagem e verificação do index.html
-            echo "Listing target dir:" && ls -la ${{ secrets.TARGET_DIR }} | head -n 50 || true
-            test -f ${{ secrets.TARGET_DIR }}/index.html && echo "index.html OK"
+      - name: Install deps
+        run: npm ci
 
-            # (Diagnóstico) Mostra root em :80 e :443
-            echo "---- Nginx roots (80/443) ----"
-            sudo grep -n 'server_name\|listen 443\|root ' /etc/nginx/sites-available/cafeselivros || true
-            echo "--------------------------------"
+      - name: Build Angular (prod)
+        run: |
+          npx ng build --configuration production
+          echo "dist tree:" && ls -la dist
+          echo "browser tree:" && ls -la dist/frontend/browser | head -n 100
 
-            # Teste e reload
+      - name: Copy files via rsync over SSH
+        uses: burnett01/rsync-deployments@v7.0.2
+        with:
+          switches: -avzr --delete
+          path: dist/frontend/browser/
+          remote_path: ${{ secrets.TARGET_DIR }}/
+          remote_host: ${{ secrets.SSH_HOST }}
+          remote_user: ${{ secrets.SSH_USER }}
+          remote_key: ${{ secrets.SSH_KEY }}
+
+      - name: Reload Nginx
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            set -euxo pipefail
+            test -f ${{ secrets.TARGET_DIR }}/index.html
             sudo nginx -t
             sudo systemctl reload nginx
-
-            # Checagem local
-            command -v curl && (curl -I http://localhost || true)
-
-      - name: (Optional) External HTTP check
-        if: ${{ !cancelled() }}
-        run: |
-          set -euxo pipefail
-          curl -I --max-time 10 http://${{ secrets.SSH_HOST }} || echo "HTTP check skipped/failed"
