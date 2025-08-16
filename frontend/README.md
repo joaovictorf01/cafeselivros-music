@@ -1,27 +1,89 @@
-# Frontend
+## Treino Auditivo Musical
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.3.17.
+Aplicação web simples para praticar percepção auditiva de intervalos musicais.
 
-## Development server
+### Objetivo
+Fornecer exercícios rápidos (identificação e comparação de intervalos) com feedback imediato e áudio de piano via SoundFont. Sem limites diários: a ideia é treinar livremente.
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+### Funcionalidades atuais
+- Identificação de intervalos (ouça e escolha a opção correta)
+- Comparação de dois intervalos (qual é maior ou se são iguais)
+- Feedback de acerto/erro com som de sucesso
+- Áudio usando Web Audio + SoundFont (fallback para onda senoidal se falhar)
+- Suporte a SSR / execução segura sem quebrar em ambiente de servidor
+- Dashboard simples com estatísticas (tentativas, acertos, taxa)
 
-## Code scaffolding
+### Tecnologias
+- Angular 17 (standalone components, novos controles de fluxo @if/@for)
+- Angular Material (botões, cards, ícones)
+- Web Audio API + soundfont-player
+- TypeScript 5
+- Nginx (deploy estático sugerido)
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+### Estrutura básica
+```
+src/app/
+	pages/
+		training-dashboard/
+		interval-identification/
+		interval-comparator/
+	services/
+		audio.service.ts
+		daily-limit.service.ts (mantido apenas para estatísticas locais)
+```
 
-## Build
+### Desenvolvimento
+Inicie servidor de desenvolvimento:
+```
+npm install
+npm start
+```
+Acesse: http://localhost:4200
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+### Build produção
+```
+npm run build
+```
+Saída principal (estático): `dist/frontend/browser/`
 
-## Running unit tests
+### Deploy estático (exemplo Nginx)
+Server block típico:
+```
+server {
+	server_name seu-dominio.com;
+	root /var/www/treino;      # apontar para dist/frontend/browser
+	index index.html;
+	location / {
+		try_files $uri $uri/ /index.html;
+	}
+	location ~* \.(?:js|css|woff2?|svg|png|jpg|ico)$ {
+		add_header Cache-Control "public, max-age=31536000, immutable";
+	}
+}
+```
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+### CI/CD (GitHub Actions)
+Workflow em `.github/workflows/deploy.yml`:
+- Build produção
+- rsync para servidor via SSH
+- Ajusta permissões e recarrega Nginx
 
-## Running end-to-end tests
+Secrets esperados:
+`SSH_HOST`, `SSH_USER`, `SSH_KEY`, `TARGET_DIR` (ex: /var/www/treino)
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+### Próximas ideias (roadmap)
+- Ampliar conjunto de intervalos (6ª, 7ª, trítono)
+- Modo “pitch absoluto” opcional
+- Histórico persistido em backend próprio (futuro: Spring API)
+- Slider de volume e seleção de oitava
+- Repetição espaçada (mais foco nos intervalos com erro)
 
-## Further help
+### Áudio: notas baixas / volume
+O serviço de áudio possui master gain + compressor. Caso queira ajustar manualmente edite `audio.service.ts` (propriedade `volume` e gains nas chamadas `play`).
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+### Contribuição
+Projeto pessoal em evolução. Sugestões ou issues são bem-vindas.
+
+### Licença
+Uso educativo / pessoal. Defina uma licença formal (ex: MIT) se for abrir contribuições externas.
+
