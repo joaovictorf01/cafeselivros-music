@@ -2,7 +2,7 @@ name: Deploy Angular to Nginx
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master" ]   # ajuste se usar outra branch
   workflow_dispatch:
 
 jobs:
@@ -35,14 +35,15 @@ jobs:
       - name: Copy files via rsync over SSH
         uses: burnett01/rsync-deployments@v7.0.2
         with:
-          switches: -avzrlptgoD --delete --progress
+          # switches simplificados (evita preservar dono/grupo/acl)
+          switches: -avzr --delete
           path: dist/frontend/browser/
           remote_path: ${{ secrets.TARGET_DIR }}/
           remote_host: ${{ secrets.SSH_HOST }}
           remote_user: ${{ secrets.SSH_USER }}
           remote_key: ${{ secrets.SSH_KEY }}
 
-      - name: Fix permissions, inspect remote & reload Nginx
+      - name: Fix perms (parents), sanity checks & reload Nginx
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -50,20 +51,34 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             set -euxo pipefail
-            echo "Listing target dir before perms:" && ls -la ${{ secrets.TARGET_DIR }} | head -n 40 || true
-            sudo chown -R ${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }} ${{ secrets.TARGET_DIR }}
+
+            # Garante pastas e permissões de acesso (pais precisam ter 'x')
+            sudo mkdir -p ${{ secrets.TARGET_DIR }}
+            sudo chown -R ${{ secrets.SSH_USER }}:www-data /var/www/cafeselivros
+            sudo chmod 755 /var/www /var/www/cafeselivros
+
+            # Permissões dentro do target (dirs 755, files 644)
             find ${{ secrets.TARGET_DIR }} -type d -exec chmod 755 {} \;
             find ${{ secrets.TARGET_DIR }} -type f -exec chmod 644 {} \;
-            echo "Listing target dir after perms:" && ls -la ${{ secrets.TARGET_DIR }} | head -n 40 || true
-            test -f ${{ secrets.TARGET_DIR }}/index.html && echo "index.html OK" || (echo "index.html NOT FOUND" && exit 1)
+
+            # Listagem e verificação do index.html
+            echo "Listing target dir:" && ls -la ${{ secrets.TARGET_DIR }} | head -n 50 || true
+            test -f ${{ secrets.TARGET_DIR }}/index.html && echo "index.html OK"
+
+            # (Diagnóstico) Mostra root em :80 e :443
+            echo "---- Nginx roots (80/443) ----"
+            sudo grep -n 'server_name\|listen 443\|root ' /etc/nginx/sites-available/cafeselivros || true
+            echo "--------------------------------"
+
+            # Teste e reload
             sudo nginx -t
             sudo systemctl reload nginx
-            # Optional: try local curl (may fail if firewall blocks external)
-            command -v curl && curl -I http://localhost || true
+
+            # Checagem local
+            command -v curl && (curl -I http://localhost || true)
 
       - name: (Optional) External HTTP check
         if: ${{ !cancelled() }}
         run: |
           set -euxo pipefail
-          # Basic external reachability test (may fail if port 80 closed). Ignore failure.
           curl -I --max-time 10 http://${{ secrets.SSH_HOST }} || echo "HTTP check skipped/failed"
