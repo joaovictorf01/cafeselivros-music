@@ -23,6 +23,9 @@ $theme: mat.define-light-theme((
 // Include theme styles for core and each component used in your app.
 @include mat.all-component-themes($theme);
 
+// Shared exercise styles
+@import 'styles/exercise';
+
 /* Global styles */
 html, body { 
   height: 100%; 

@@ -1,47 +1,31 @@
-<div class="comparison-container" (keydown)="onKeydown($event)" tabindex="0">
+<div class="exercise-page" (keydown)="onKeydown($event)" tabindex="0">
   <header class="exercise-header">
     <button mat-icon-button (click)="goBack()" aria-label="Voltar">
       <mat-icon>arrow_back</mat-icon>
     </button>
     <h1>Comparador de Intervalos</h1>
-    <div class="attempts-counter">
-      Restantes: {{ remainingAttempts() }}
-    </div>
   </header>
 
   <main class="exercise-content unified">
-    <section class="exercise-section">
-      <p class="section-instruction">Ouça os dois pares de notas e determine qual intervalo é maior:</p>
+    <section class="exercise-section audio">
+      <h2 class="section-title">Ouça os pares</h2>
+      <p class="section-instructions">Qual intervalo é maior?</p>
       <div class="audio-controls">
-        <button
-          mat-raised-button
-          color="primary"
-          [disabled]="isPlayDisabled()"
-          (click)="playPairA()"
-          class="audio-button">
+        <button mat-raised-button color="primary" [disabled]="isPlayDisabled()" (click)="playPairA()">
           <mat-icon>play_arrow</mat-icon>
           Par A
         </button>
-        <button
-          mat-raised-button
-          color="primary"
-          [disabled]="isPlayDisabled()"
-          (click)="playPairB()"
-          class="audio-button">
+        <button mat-raised-button color="primary" [disabled]="isPlayDisabled()" (click)="playPairB()">
           <mat-icon>play_arrow</mat-icon>
           Par B
         </button>
-        <button
-          mat-stroked-button
-          [disabled]="isPlayDisabled()"
-          (click)="repeatBoth()"
-          class="aux-button">
+        <button mat-stroked-button [disabled]="isPlayDisabled()" (click)="repeatBoth()">
           <mat-icon>replay</mat-icon>
           Repetir (R)
         </button>
       </div>
       @if (isPlaying()) {
-        <div class="playing-indicator">
+        <div class="playing-indicator" aria-live="polite">
           <mat-icon class="spinning">volume_up</mat-icon>
           Reproduzindo...
         </div>
@@ -49,68 +33,33 @@
     </section>
 
     <section class="exercise-section answers">
-      <h2 class="section-title">Qual intervalo é maior?</h2>
-      <div class="answer-buttons three-cols">
-        <button
-          mat-raised-button
-          [color]="selectedAnswer() === 'A' ? 'primary' : undefined"
-          [disabled]="isAnswered()"
-          (click)="selectAnswer('A')"
-          class="answer-button">
-          <mat-icon>music_note</mat-icon>
-          A
-        </button>
-        <button
-          mat-raised-button
-          [color]="selectedAnswer() === 'B' ? 'primary' : undefined"
-          [disabled]="isAnswered()"
-          (click)="selectAnswer('B')"
-          class="answer-button">
-          <mat-icon>music_note</mat-icon>
-          B
-        </button>
-        <button
-          mat-raised-button
-          [color]="selectedAnswer() === 'equal' ? 'primary' : undefined"
-          [disabled]="isAnswered()"
-          (click)="selectAnswer('equal')"
-          class="answer-button">
-          <mat-icon>balance</mat-icon>
-          Iguais
-        </button>
-      </div>
+      <h2 class="section-title">Escolha a resposta</h2>
+      <app-answer-grid
+        [options]="answerOptions"
+        [disabled]="isAnswered()"
+        [value]="selectedAnswer() || ''"
+        (answered)="selectAnswer($event)">
+      </app-answer-grid>
+      @if (canPlayNext()) {
+        <div class="nav-row">
+          <button mat-stroked-button color="primary" (click)="nextExercise()">Próximo (N)</button>
+        </div>
+      }
       @if (showFeedback()) {
         <div class="feedback" [class.correct]="feedbackMessage().includes('Correto')">
           <p role="status">{{ feedbackMessage() }}</p>
           @if (intervalA() && intervalB()) {
             <div class="interval-info">
-              <p><strong>Par A:</strong> {{ intervalA()!.displayName }} ({{ intervalA()!.semitones }} st)</p>
-              <p><strong>Par B:</strong> {{ intervalB()!.displayName }} ({{ intervalB()!.semitones }} st)</p>
+              <p><strong>Par A:</strong> {{ intervalA()!.displayName }} ({{ intervalA()!.semitones }} semitons)</p>
+              <p><strong>Par B:</strong> {{ intervalB()!.displayName }} ({{ intervalB()!.semitones }} semitons)</p>
             </div>
           }
         </div>
       }
-      <div class="actions-row">
-        <button
-          mat-raised-button
-          color="primary"
-          [disabled]="isSubmitDisabled()"
-          (click)="submitAnswer()">
-          Responder
-        </button>
-        @if (canPlayNext()) {
-          <button
-            mat-raised-button
-            color="accent"
-            (click)="nextExercise()">
-            Próximo (N)
-          </button>
-        }
-      </div>
     </section>
   </main>
 
-  <div class="shortcuts-info">
-    <p><strong>Atalhos:</strong> R = Repetir | N = Próximo | Enter = Responder</p>
-  </div>
+  <footer class="shortcuts-info" aria-label="Atalhos do teclado">
+    <p><strong>Atalhos:</strong> R = Repetir | N = Próximo</p>
+  </footer>
 </div>

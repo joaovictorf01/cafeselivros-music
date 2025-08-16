@@ -1,61 +1,45 @@
-<div class="identification-container" (keydown)="onKeydown($event)" tabindex="0">
+<div class="exercise-page" (keydown)="onKeydown($event)" tabindex="0">
   <header class="exercise-header">
     <button mat-icon-button (click)="goBack()" aria-label="Voltar">
       <mat-icon>arrow_back</mat-icon>
     </button>
     <h1>Identificação de Intervalos</h1>
-    <div class="attempts-counter">
-      Restantes: {{ remainingAttempts() }}
-    </div>
   </header>
 
   <main class="exercise-content unified">
-    <section class="exercise-section">
-      <p class="section-instruction">Ouça o intervalo tocado e identifique qual é:</p>
-      <p class="direction-info"><strong>Direção:</strong> {{ getDirectionText() }}</p>
-      <div class="audio-controls">
-        <button
-          mat-raised-button
-          color="primary"
-          [disabled]="isPlayDisabled()"
-          (click)="playInterval()"
-          class="audio-button">
+    <section class="exercise-section audio">
+      <h2 class="section-title">Ouça o intervalo {{ getDirectionText() }}</h2>
+      <div class="audio-controls single">
+        <button mat-raised-button color="primary" [disabled]="isPlayDisabled()" (click)="playInterval()">
           <mat-icon>{{ isPlaying() ? 'volume_up' : 'play_arrow' }}</mat-icon>
-          {{ isPlaying() ? 'Tocando' : 'Ouvir' }}
+          {{ isPlaying() ? 'Reproduzindo...' : 'Ouvir (Enter)' }}
         </button>
-        <button
-          mat-stroked-button
-          [disabled]="isPlayDisabled() || isPlaying()"
-          (click)="playInterval()"
-          class="aux-button">
+        <button mat-stroked-button [disabled]="isPlayDisabled()" (click)="playInterval()">
           <mat-icon>replay</mat-icon>
           Repetir (R)
         </button>
       </div>
       @if (isPlaying()) {
-        <div class="playing-indicator">
+        <div class="playing-indicator" aria-live="polite">
           <mat-icon class="spinning">volume_up</mat-icon>
-          Reproduzindo intervalo...
+          Reproduzindo intervalo {{ getDirectionText() }}...
         </div>
       }
     </section>
 
     <section class="exercise-section answers">
-      <h2 class="section-title">Qual intervalo você ouviu?</h2>
-      <div class="answer-buttons grid">
-        @for (option of options(); track option.name) {
-          <button
-            mat-raised-button
-            [color]="selectedAnswer() === option.name ? 'primary' : undefined"
-            [disabled]="isAnswered()"
-            (click)="selectAnswer(option.name)"
-            class="answer-button"
-            [attr.aria-label]="'Selecionar intervalo ' + option.displayName">
-            <mat-icon>music_note</mat-icon>
-            <span class="short-label">{{ option.displayName }}</span>
-          </button>
-        }
-      </div>
+      <h2 class="section-title">Escolha a resposta</h2>
+      <app-answer-grid
+        [options]="mappedOptions"
+        [disabled]="isAnswered()"
+        [value]="selectedAnswer() || ''"
+        (answered)="selectAnswer($event)">
+      </app-answer-grid>
+      @if (canPlayNext()) {
+        <div class="nav-row">
+          <button mat-stroked-button color="primary" (click)="nextExercise()">Próximo (N)</button>
+        </div>
+      }
       @if (showFeedback()) {
         <div class="feedback" [class.correct]="feedbackMessage().includes('Correto')">
           <p role="status">{{ feedbackMessage() }}</p>
@@ -68,27 +52,12 @@
           }
         </div>
       }
-      <div class="actions-row">
-        <button
-          mat-raised-button
-          color="primary"
-          [disabled]="isSubmitDisabled()"
-          (click)="submitAnswer()">
-          Responder
-        </button>
-        @if (canPlayNext()) {
-          <button
-            mat-raised-button
-            color="accent"
-            (click)="nextExercise()">
-            Próximo (N)
-          </button>
-        }
-      </div>
     </section>
+
+  
   </main>
 
-  <div class="shortcuts-info">
-    <p><strong>Atalhos:</strong> R = Repetir | N = Próximo | Enter = Ouvir/Responder</p>
-  </div>
+  <footer class="shortcuts-info" aria-label="Atalhos do teclado">
+    <p><strong>Atalhos:</strong> R = Repetir | N = Próximo | Enter = Ouvir</p>
+  </footer>
 </div>

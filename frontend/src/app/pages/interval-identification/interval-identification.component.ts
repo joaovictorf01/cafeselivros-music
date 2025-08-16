@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { AnswerGridComponent, AnswerOption } from '../../shared/answer-grid/answer-grid.component';
 import { AudioService, Interval } from '../../services/audio.service';
 import { DailyLimitService } from '../../services/daily-limit.service';
 
@@ -13,7 +14,8 @@ import { DailyLimitService } from '../../services/daily-limit.service';
   imports: [
     MatCardModule,
     MatButtonModule,
-    MatIconModule
+  MatIconModule,
+  AnswerGridComponent
   ],
   templateUrl: './interval-identification.component.html',
   styleUrl: './interval-identification.component.scss'
@@ -34,6 +36,15 @@ export class IntervalIdentificationComponent implements OnInit {
   
   // Limite desativado
   remainingAttempts = signal<number | null>(null);
+
+  get mappedOptions(): AnswerOption[] {
+    return this.options().map(o => ({
+      value: o.name,
+      label: o.displayName,
+      subtitle: o.semitones + ' st',
+      icon: 'music_note'
+    }));
+  }
 
   constructor(
     private router: Router,
@@ -163,9 +174,9 @@ export class IntervalIdentificationComponent implements OnInit {
   }
 
   selectAnswer(intervalName: string) {
-    if (!this.isAnswered()) {
-      this.selectedAnswer.set(intervalName);
-    }
+    if (this.isAnswered()) return;
+    this.selectedAnswer.set(intervalName);
+    this.submitAnswer();
   }
 
   nextExercise() { this.generateNewExercise(); }
@@ -201,10 +212,7 @@ export class IntervalIdentificationComponent implements OnInit {
         }
         break;
       case 'enter':
-        if (!this.isSubmitDisabled()) {
-          event.preventDefault();
-          this.submitAnswer();
-        } else if (!this.isPlayDisabled()) {
+        if (!this.isPlayDisabled()) {
           event.preventDefault();
           this.playInterval();
         }

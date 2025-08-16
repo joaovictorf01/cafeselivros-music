@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { AnswerGridComponent, AnswerOption } from '../../shared/answer-grid/answer-grid.component';
 import { AudioService, Interval } from '../../services/audio.service';
 import { DailyLimitService } from '../../services/daily-limit.service';
 
@@ -15,7 +16,8 @@ type ComparisonAnswer = 'A' | 'B' | 'equal' | null;
   imports: [
     MatCardModule,
     MatButtonModule,
-    MatIconModule
+  MatIconModule,
+  AnswerGridComponent
   ],
   templateUrl: './interval-comparator.component.html',
   styleUrl: './interval-comparator.component.scss'
@@ -37,6 +39,12 @@ export class IntervalComparatorComponent implements OnInit {
   
   // Limite desativado
   remainingAttempts = signal<number | null>(null);
+
+  answerOptions: AnswerOption[] = [
+    { value: 'A', label: 'Par A é maior', icon: 'looks_one' },
+    { value: 'B', label: 'Par B é maior', icon: 'looks_two' },
+    { value: 'equal', label: 'Iguais', icon: 'drag_handle' }
+  ];
 
   constructor(
     private router: Router,
@@ -145,10 +153,13 @@ export class IntervalComparatorComponent implements OnInit {
   // Limite desativado
   }
 
-  selectAnswer(answer: ComparisonAnswer) {
-    if (!this.isAnswered()) {
-      this.selectedAnswer.set(answer);
-    }
+  selectAnswer(answer: ComparisonAnswer | string) {
+    // normalize
+    if (answer !== 'A' && answer !== 'B' && answer !== 'equal') return;
+  if (this.isAnswered()) return;
+  this.selectedAnswer.set(answer);
+  // Auto submit immediately
+  this.submitAnswer();
   }
 
   nextExercise() { this.generateNewExercise(); }
@@ -188,12 +199,7 @@ export class IntervalComparatorComponent implements OnInit {
           this.nextExercise();
         }
         break;
-      case 'enter':
-        if (!this.isSubmitDisabled()) {
-          event.preventDefault();
-          this.submitAnswer();
-        }
-        break;
+  // Enter no longer needed for submit
     }
   }
 }
