@@ -28,11 +28,25 @@
   }
 }
 
-.exercise-content {
+.exercise-content.unified {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.exercise-section {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 16px;
+  padding: 24px 28px;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
 }
+
+.section-title { margin: 0; font-size: 18px; font-weight: 600; text-align: center; }
+.section-instruction { margin: 0; font-size: 16px; text-align: center; }
 
 .instruction-card {
   text-align: center;
@@ -44,32 +58,13 @@
   }
 }
 
-.audio-controls {
-  display: flex;
-  gap: 15px;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-bottom: 20px;
-}
+.audio-controls { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
 
-.audio-button {
-  min-width: 140px;
-  height: 48px;
-  font-size: 16px;
-  
-  mat-icon {
-    margin-right: 8px;
-  }
-}
+.audio-button, .aux-button { min-width: 120px; height: 44px; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; mat-icon { margin-right: 6px; } }
 
-.repeat-button {
-  min-width: 120px;
-  height: 48px;
-  
-  mat-icon {
-    margin-right: 8px;
-  }
-}
+.three-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px,1fr)); gap: 16px; margin-top: 8px; }
+.answer-button { height: 56px; font-weight: 500; }
+.actions-row { margin-top: 20px; display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
 
 .playing-indicator {
   display: flex;
