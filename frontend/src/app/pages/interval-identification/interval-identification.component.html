@@ -6,9 +6,9 @@
     <h1>Identificação de Intervalos</h1>
   </header>
 
-  <main class="exercise-content unified">
-    <section class="exercise-section audio">
-      <h2 class="section-title">Ouça o intervalo {{ getDirectionText() }}</h2>
+  <div class="exercise-content unified">
+  <section class="exercise-section audio">
+      <h2 id="titulo-audio" class="section-title"><mat-icon aria-hidden="true">hearing</mat-icon> Ouça o intervalo {{ getDirectionText() }}</h2>
       <div class="audio-controls single">
         <button mat-raised-button color="primary" [disabled]="isPlayDisabled()" (click)="playInterval()">
           <mat-icon>{{ isPlaying() ? 'volume_up' : 'play_arrow' }}</mat-icon>
@@ -27,12 +27,13 @@
       }
     </section>
 
-    <section class="exercise-section answers">
-      <h2 class="section-title">Escolha a resposta</h2>
+  <section class="exercise-section answers">
+      <h2 id="titulo-resposta" class="section-title"><mat-icon aria-hidden="true">quiz</mat-icon> Escolha a resposta</h2>
       <app-answer-grid
         [options]="mappedOptions"
         [disabled]="isAnswered()"
         [value]="selectedAnswer() || ''"
+        labelledBy="titulo-resposta"
         (answered)="selectAnswer($event)">
       </app-answer-grid>
       @if (canPlayNext()) {
@@ -42,7 +43,7 @@
       }
       @if (showFeedback()) {
         <div class="feedback" [class.correct]="feedbackMessage().includes('Correto')">
-          <p role="status">{{ feedbackMessage() }}</p>
+          <p>{{ feedbackMessage() }}</p>
           @if (currentInterval()) {
             <div class="interval-info">
               <p><strong>Intervalo correto:</strong> {{ currentInterval()!.displayName }}</p>
@@ -55,7 +56,7 @@
     </section>
 
   
-  </main>
+  </div>
 
   <footer class="shortcuts-info" aria-label="Atalhos do teclado">
     <p><strong>Atalhos:</strong> R = Repetir | N = Próximo | Enter = Ouvir</p>

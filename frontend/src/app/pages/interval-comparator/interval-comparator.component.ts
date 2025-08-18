@@ -1,7 +1,6 @@
 import { Component, OnInit, signal, PLATFORM_ID, Inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { AnswerGridComponent, AnswerOption } from '../../shared/answer-grid/answer-grid.component';
@@ -14,7 +13,6 @@ type ComparisonAnswer = 'A' | 'B' | 'equal' | null;
   selector: 'app-interval-comparator',
   standalone: true,
   imports: [
-    MatCardModule,
     MatButtonModule,
   MatIconModule,
   AnswerGridComponent
@@ -37,8 +35,6 @@ export class IntervalComparatorComponent implements OnInit {
   isAnswered = signal(false);
   feedbackMessage = signal('');
   
-  // Limite desativado
-  remainingAttempts = signal<number | null>(null);
 
   answerOptions: AnswerOption[] = [
     { value: 'A', label: 'Par A é maior', icon: 'looks_one' },
@@ -72,7 +68,6 @@ export class IntervalComparatorComponent implements OnInit {
     }
   }
 
-  private updateRemainingAttempts() { /* limite desativado */ }
 
   private generateNewExercise() {
     const { intervalA, intervalB } = this.audioService.generateIntervalPair();
@@ -180,7 +175,6 @@ export class IntervalComparatorComponent implements OnInit {
   // Template helper methods
   isPlayDisabled(): boolean { return this.isPlaying(); }
 
-  isSubmitDisabled(): boolean { return this.selectedAnswer() === null || this.isAnswered(); }
 
   canPlayNext(): boolean { return this.isAnswered(); }
 

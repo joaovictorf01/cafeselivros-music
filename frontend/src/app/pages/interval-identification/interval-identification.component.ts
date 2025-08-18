@@ -1,7 +1,6 @@
 import { Component, OnInit, signal, PLATFORM_ID, Inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { AnswerGridComponent, AnswerOption } from '../../shared/answer-grid/answer-grid.component';
@@ -12,7 +11,6 @@ import { DailyLimitService } from '../../services/daily-limit.service';
   selector: 'app-interval-identification',
   standalone: true,
   imports: [
-    MatCardModule,
     MatButtonModule,
   MatIconModule,
   AnswerGridComponent
@@ -34,8 +32,6 @@ export class IntervalIdentificationComponent implements OnInit {
   isAnswered = signal(false);
   feedbackMessage = signal('');
   
-  // Limite desativado
-  remainingAttempts = signal<number | null>(null);
 
   get mappedOptions(): AnswerOption[] {
     return this.options().map(o => ({
@@ -72,7 +68,6 @@ export class IntervalIdentificationComponent implements OnInit {
     }
   }
 
-  private updateRemainingAttempts() { /* limite desativado */ }
 
   private generateNewExercise() {
     // Pick random interval
@@ -188,7 +183,6 @@ export class IntervalIdentificationComponent implements OnInit {
   // Template helper methods
   isPlayDisabled(): boolean { return this.isPlaying(); }
 
-  isSubmitDisabled(): boolean { return this.selectedAnswer() === null || this.isAnswered(); }
 
   canPlayNext(): boolean { return this.isAnswered(); }
 

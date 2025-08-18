@@ -21,6 +21,7 @@ export class TrainingDashboardComponent implements OnInit {
   userName = signal('');
   attemptsToday = signal(0);
   successesToday = signal(0);
+  // streakDays reservado para futura funcionalidade
   streakDays = signal(0);
 
   constructor(

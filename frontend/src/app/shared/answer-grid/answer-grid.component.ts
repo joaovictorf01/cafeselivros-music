@@ -22,7 +22,8 @@ export interface AnswerOption {
       (change)="onChange($event)"
       [value]="value"
       appearance="legacy"
-      aria-label="Opções de resposta">
+      [attr.aria-labelledby]="labelledBy || null"
+      [attr.aria-label]="labelledBy ? null : 'Opções de resposta'">
       <mat-button-toggle *ngFor="let opt of options" [value]="opt.value">
         <span class="opt-inner">
           <mat-icon *ngIf="opt.icon" class="opt-icon">{{opt.icon}}</mat-icon>
@@ -53,6 +54,7 @@ export class AnswerGridComponent {
   @Input() options: AnswerOption[] = [];
   @Input() disabled = false;
   @Input() value: string | null = null;
+  @Input() labelledBy?: string;
   @Output() valueChange = new EventEmitter<string>();
   @Output() answered = new EventEmitter<string>();
 

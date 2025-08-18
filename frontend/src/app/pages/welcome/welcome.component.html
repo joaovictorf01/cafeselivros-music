@@ -1,7 +1,8 @@
 <div class="welcome-container">
   <mat-card class="welcome-card">
     <mat-card-header>
-      <mat-card-title>Bem-vindo ao Treino Auditivo Musical!</mat-card-title>
+      <div class="visually-hidden" role="heading" aria-level="1">Bem-vindo ao Treino Auditivo Musical</div>
+      <mat-card-title role="heading" aria-level="2">Bem-vindo ao Treino Auditivo Musical!</mat-card-title>
       <mat-card-subtitle>Desenvolva sua percepção musical com exercícios de intervalos</mat-card-subtitle>
     </mat-card-header>
 
@@ -35,8 +36,10 @@
         color="primary" 
         [disabled]="isStartDisabled()"
         (click)="onStart()"
-        class="start-button">
-        Começar
+        class="start-button"
+        aria-label="Iniciar treinamento">
+        <mat-icon aria-hidden="true">play_circle</mat-icon>
+        <span>Começar</span>
       </button>
     </mat-card-actions>
   </mat-card>

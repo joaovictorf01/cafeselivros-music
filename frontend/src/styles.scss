@@ -51,3 +51,41 @@ button:focus-visible,
   outline: 2px solid mat.get-color-from-palette($primary, 500);
   outline-offset: 2px;
 }
+
+/* Utility classes */
+.visually-hidden { 
+  position: absolute !important; 
+  height: 1px; width: 1px; 
+  overflow: hidden; 
+  clip: rect(1px, 1px, 1px, 1px); 
+  white-space: nowrap; 
+}
+
+.skip-link { 
+  position: absolute; 
+  left: -999px; 
+  top: auto; 
+  width: 1px; 
+  height: 1px; 
+  overflow: hidden; 
+  z-index: 1000; 
+}
+.skip-link:focus { 
+  left: 0; 
+  top: 0; 
+  width: auto; 
+  height: auto; 
+  padding: .75rem 1rem; 
+  background: mat.get-color-from-palette($primary, 500); 
+  color: #fff; 
+  text-decoration: none; 
+  font-weight: 600; 
+  box-shadow: 0 2px 6px rgba(0,0,0,.3); 
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  mat-toolbar .app-title { font-size: 1rem; }
+  mat-toolbar a[mat-button] { padding: 0 .5rem; }
+  mat-toolbar a[mat-button] mat-icon { margin-right: 2px; }
+}

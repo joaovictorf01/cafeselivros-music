@@ -6,9 +6,9 @@
     <h1>Comparador de Intervalos</h1>
   </header>
 
-  <main class="exercise-content unified">
+  <div class="exercise-content unified">
     <section class="exercise-section audio">
-      <h2 class="section-title">Ouça os pares</h2>
+      <h2 class="section-title"><mat-icon aria-hidden="true">hearing</mat-icon> Ouça os pares</h2>
       <p class="section-instructions">Qual intervalo é maior?</p>
       <div class="audio-controls">
         <button mat-raised-button color="primary" [disabled]="isPlayDisabled()" (click)="playPairA()">
@@ -25,15 +25,14 @@
         </button>
       </div>
       @if (isPlaying()) {
-        <div class="playing-indicator" aria-live="polite">
+        <div class="playing-indicator">
           <mat-icon class="spinning">volume_up</mat-icon>
           Reproduzindo...
         </div>
       }
-    </section>
-
+  </section>
     <section class="exercise-section answers">
-      <h2 class="section-title">Escolha a resposta</h2>
+      <h2 class="section-title"><mat-icon aria-hidden="true">quiz</mat-icon> Escolha a resposta</h2>
       <app-answer-grid
         [options]="answerOptions"
         [disabled]="isAnswered()"
@@ -47,7 +46,7 @@
       }
       @if (showFeedback()) {
         <div class="feedback" [class.correct]="feedbackMessage().includes('Correto')">
-          <p role="status">{{ feedbackMessage() }}</p>
+          <p>{{ feedbackMessage() }}</p>
           @if (intervalA() && intervalB()) {
             <div class="interval-info">
               <p><strong>Par A:</strong> {{ intervalA()!.displayName }} ({{ intervalA()!.semitones }} semitons)</p>
@@ -57,9 +56,9 @@
         </div>
       }
     </section>
-  </main>
+  </div>
 
-  <footer class="shortcuts-info" aria-label="Atalhos do teclado">
+  <footer class="shortcuts-info">
     <p><strong>Atalhos:</strong> R = Repetir | N = Próximo</p>
   </footer>
 </div>
